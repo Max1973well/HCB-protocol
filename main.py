@@ -8,6 +8,7 @@ import streamlit as st
 TRANSPORTE_IDA = "Ida Transporte"
 TRANSPORTE_VOLTA = "Volta Transporte"
 ATIVIDADE_HIDRO = "Hidroginástica"
+STATUS_MEDICACAO = ["feito", "atrasado", "nao_administrado"]
 PASTA_DADOS = "04_RELATORIOS_GERADOS"
 ARQUIVO_DB = os.path.join(PASTA_DADOS, "dados_v1.json")
 ARQUIVO_DB_BACKUP = os.path.join(PASTA_DADOS, "dados_v1.backup.json")
@@ -20,61 +21,122 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+if "modo_acessivel" not in st.session_state:
+    st.session_state.modo_acessivel = True
+
+st.toggle(
+    "Modo de alta acessibilidade visual (WCAG)",
+    key="modo_acessivel",
+    help="Aumenta contraste, destaca foco de teclado e melhora legibilidade para baixa visão.",
+)
+
 
 st.markdown(
     """
 <style>
-    .stApp { background-color: #1a1a2e; color: #E5E4E2; }
+    .stApp {
+        background: linear-gradient(180deg, #22324a 0%, #1d2c44 100%);
+        color: #f4f7fb;
+        font-size: 1.08rem;
+    }
     .hcb-title {
-        text-align: center; font-family: 'Courier New', monospace; font-size: 1.8rem;
-        font-weight: bold; color: #00d4aa; text-shadow: 0 0 20px #00d4aa55;
+        text-align: center; font-family: 'Courier New', monospace; font-size: 2.15rem;
+        font-weight: bold; color: #4ef0c9; text-shadow: 0 0 20px #00d4aa55;
         padding: 1rem 0 0.2rem 0; letter-spacing: 3px;
     }
     .hcb-subtitle {
-        text-align: center; font-family: 'Courier New', monospace; font-size: 0.75rem;
-        color: #5a8a7a; letter-spacing: 2px; margin-bottom: 1.5rem;
+        text-align: center; font-family: 'Courier New', monospace; font-size: 0.95rem;
+        color: #bdd9cd; letter-spacing: 1px; margin-bottom: 1.5rem;
     }
     .visor {
-        background: linear-gradient(135deg, #0d2137, #0a3d2e); border: 1px solid #00d4aa44;
+        background: linear-gradient(135deg, #1b3959, #1e4a42); border: 1px solid #4ef0c966;
         border-radius: 8px; padding: 0.8rem 1rem; font-family: 'Courier New', monospace;
-        font-size: 0.85rem; color: #00d4aa; text-align: center; margin-bottom: 1.5rem;
+        font-size: 1rem; color: #bfffe9; text-align: center; margin-bottom: 1.5rem;
         box-shadow: 0 0 15px #00d4aa22;
     }
     .section-label {
-        font-family: 'Courier New', monospace; font-size: 0.7rem; color: #5a7a9a;
-        letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.6rem;
+        font-family: 'Courier New', monospace; font-size: 0.95rem; color: #d3e6ff;
+        letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.6rem; font-weight: bold;
     }
     .stButton > button {
         background: linear-gradient(135deg, #00d4aa, #00a888) !important;
         color: #0a1628 !important; font-family: 'Courier New', monospace !important;
         font-weight: bold !important; letter-spacing: 2px !important; border: none !important;
-        border-radius: 8px !important; padding: 0.7rem 2rem !important; font-size: 0.9rem !important;
+        border-radius: 8px !important; padding: 0.85rem 2rem !important; font-size: 1.05rem !important;
         width: 100% !important; transition: all 0.3s !important; box-shadow: 0 4px 15px #00d4aa44 !important;
     }
     .stCheckbox label {
-        color: #b0c4d8 !important; font-family: 'Courier New', monospace !important;
-        font-size: 0.9rem !important;
+        color: #eef5ff !important; font-family: 'Courier New', monospace !important;
+        font-size: 1.05rem !important; font-weight: 600 !important;
     }
     .stTextArea > div > div > textarea {
-        background-color: #0d1f33 !important; color: #E5E4E2 !important;
-        border: 1px solid #2a4a6e !important; border-radius: 6px !important;
-        font-family: 'Courier New', monospace !important;
+        background-color: #223a5a !important; color: #f6fbff !important;
+        border: 2px solid #6f98c7 !important; border-radius: 8px !important;
+        font-family: 'Courier New', monospace !important; font-size: 1.02rem !important;
     }
     .historico-item {
-        background: #0d1f33; border-left: 3px solid #00d4aa; border-radius: 0 6px 6px 0;
+        background: #1b3351; border-left: 4px solid #4ef0c9; border-radius: 0 6px 6px 0;
         padding: 0.6rem 0.8rem; margin: 0.4rem 0; font-family: 'Courier New', monospace;
-        font-size: 0.8rem; color: #8ab4c8;
+        font-size: 0.95rem; color: #d6ecff;
     }
     .msg-success {
-        background: #0a2e1a; border: 1px solid #00d4aa; border-radius: 6px; padding: 0.7rem;
-        color: #00d4aa; font-family: 'Courier New', monospace; font-size: 0.85rem;
+        background: #1b4a34; border: 1px solid #6cffd6; border-radius: 6px; padding: 0.8rem;
+        color: #d7fff4; font-family: 'Courier New', monospace; font-size: 0.98rem;
         text-align: center; margin-top: 0.5rem;
+    }
+    .stCaption, .stMarkdown p, .stTextInput label, .stTextArea label, .stDateInput label, .stTimeInput label, .stSelectbox label {
+        font-size: 1rem !important;
+        color: #e6f1ff !important;
     }
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
 </style>
 """,
     unsafe_allow_html=True,
 )
+
+if st.session_state.modo_acessivel:
+    st.markdown(
+        """
+<style>
+    /* Camada adicional de acessibilidade visual (WCAG AA orientativo) */
+    .stApp {
+        background: #1c2c45 !important;
+        color: #ffffff !important;
+    }
+    .stMarkdown, .stCaption, .stText, .stAlert, p, label, span {
+        color: #ffffff !important;
+    }
+    .stButton > button {
+        min-height: 48px !important;
+        font-size: 1.1rem !important;
+        border: 2px solid #d8fff1 !important;
+    }
+    .stCheckbox label, .stRadio label, .stSelectbox label, .stDateInput label, .stTimeInput label, .stTextInput label, .stTextArea label {
+        font-size: 1.08rem !important;
+        font-weight: 700 !important;
+    }
+    .stTextInput input, .stTextArea textarea, .stSelectbox [data-baseweb="select"] > div, .stDateInput input, .stTimeInput input {
+        border: 2px solid #9ec7ff !important;
+        background-color: #213a5a !important;
+        color: #ffffff !important;
+    }
+    /* Foco de teclado bem visível */
+    button:focus, input:focus, textarea:focus, [role="combobox"]:focus, [tabindex]:focus {
+        outline: 3px solid #ffe083 !important;
+        outline-offset: 2px !important;
+    }
+    /* Reduz animações para pessoas sensíveis a movimento */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation: none !important;
+            transition: none !important;
+            scroll-behavior: auto !important;
+        }
+    }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 def salvar_drive(conteudo: str, nome_arquivo: str) -> bool:
@@ -110,7 +172,7 @@ def salvar_local(conteudo: str, nome_arquivo: str) -> str:
 
 
 def carregar_banco_json() -> dict:
-    base_vazia = {"versao": "1.1", "registros": []}
+    base_vazia = {"versao": "1.2", "registros": []}
     if not os.path.exists(ARQUIVO_DB):
         return base_vazia
 
@@ -173,8 +235,35 @@ def carregar_historico_sessao() -> list:
     return historico
 
 
+def montar_bloco_agenda(agenda_itens: list) -> str:
+    if not agenda_itens:
+        return "AGENDA MÉDICA:\n  • —"
+    linhas = ["AGENDA MÉDICA:"]
+    for item in agenda_itens:
+        linhas.append(
+            f"  • {item['data']} {item['hora']} | {item['tipo']} | {item['local']} | {item['anotacoes']}"
+        )
+    return "\n".join(linhas)
+
+
+def montar_bloco_medicacoes(medicacoes: list) -> str:
+    if not medicacoes:
+        return "MEDICAÇÕES:\n  • —"
+    linhas = ["MEDICAÇÕES:"]
+    for med in medicacoes:
+        linhas.append(
+            f"  • {med['medicamento']} {med['dose']} | previsto {med['horario_previsto']} | "
+            f"realizado {med['horario_realizado']} | status {med['status']} | motivo: {med['motivo']}"
+        )
+    return "\n".join(linhas)
+
+
 if "historico" not in st.session_state:
     st.session_state.historico = carregar_historico_sessao()
+if "agenda_count" not in st.session_state:
+    st.session_state.agenda_count = 1
+if "med_count" not in st.session_state:
+    st.session_state.med_count = 1
 
 
 st.markdown('<div class="hcb-title">⬡ HCB FISIO</div>', unsafe_allow_html=True)
@@ -220,10 +309,88 @@ obs = st.text_area(
 
 st.markdown("---")
 
+st.markdown('<div class="section-label">► AGENDA DE ACOMPANHAMENTO MÉDICO</div>', unsafe_allow_html=True)
+for i in range(st.session_state.agenda_count):
+    st.markdown(f"**Compromisso {i + 1}**")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.date_input("Data", key=f"agenda_data_{i}")
+        st.text_input("Tipo", value="consulta", key=f"agenda_tipo_{i}")
+    with col_b:
+        st.time_input("Hora", key=f"agenda_hora_{i}")
+        st.text_input("Local", value="—", key=f"agenda_local_{i}")
+    st.text_area("Anotações", key=f"agenda_anot_{i}", height=80)
+if st.button("➕ Adicionar compromisso de agenda"):
+    st.session_state.agenda_count += 1
+    st.rerun()
+
+st.markdown("---")
+st.markdown('<div class="section-label">► MEDICAÇÕES</div>', unsafe_allow_html=True)
+for i in range(st.session_state.med_count):
+    st.markdown(f"**Medicação {i + 1}**")
+    col_m1, col_m2 = st.columns(2)
+    with col_m1:
+        st.text_input("Medicamento", key=f"med_nome_{i}")
+        st.text_input("Dose", key=f"med_dose_{i}", value="—")
+        st.time_input("Horário Previsto", key=f"med_prev_{i}")
+    with col_m2:
+        st.time_input("Horário Realizado", key=f"med_real_{i}")
+        st.selectbox("Status", STATUS_MEDICACAO, key=f"med_status_{i}")
+        st.text_input("Motivo (se não administrado)", key=f"med_motivo_{i}", value="—")
+if st.button("➕ Adicionar medicação"):
+    st.session_state.med_count += 1
+    st.rerun()
+
+st.markdown("---")
+
 if st.button("⬡ GERAR RELATÓRIO HCB"):
     data_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     nome_arquivo = f"Relatorio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     obs_txt = obs.strip() if obs and obs.strip() else "—"
+    agenda_itens = []
+    medicacoes = []
+
+    for i in range(st.session_state.agenda_count):
+        tipo = st.session_state.get(f"agenda_tipo_{i}", "").strip()
+        local = st.session_state.get(f"agenda_local_{i}", "").strip()
+        anot = st.session_state.get(f"agenda_anot_{i}", "").strip()
+        data = st.session_state.get(f"agenda_data_{i}")
+        hora = st.session_state.get(f"agenda_hora_{i}")
+        if tipo or local != "—" or anot:
+            agenda_itens.append(
+                {
+                    "data": data.strftime("%d/%m/%Y"),
+                    "hora": hora.strftime("%H:%M"),
+                    "tipo": tipo if tipo else "consulta",
+                    "local": local if local else "—",
+                    "anotacoes": anot if anot else "—",
+                }
+            )
+
+    for i in range(st.session_state.med_count):
+        nome = st.session_state.get(f"med_nome_{i}", "").strip()
+        if not nome:
+            continue
+        status = st.session_state.get(f"med_status_{i}", "feito")
+        motivo = st.session_state.get(f"med_motivo_{i}", "").strip() or "—"
+        if status == "nao_administrado" and motivo == "—":
+            st.warning("Informe o motivo da medicação não administrada.")
+            st.stop()
+        med_prev = st.session_state.get(f"med_prev_{i}")
+        med_real = st.session_state.get(f"med_real_{i}")
+        medicacoes.append(
+            {
+                "medicamento": nome,
+                "dose": st.session_state.get(f"med_dose_{i}", "—").strip() or "—",
+                "horario_previsto": med_prev.strftime("%H:%M"),
+                "horario_realizado": med_real.strftime("%H:%M"),
+                "status": status,
+                "motivo": motivo,
+            }
+        )
+
+    bloco_agenda = montar_bloco_agenda(agenda_itens)
+    bloco_medicacoes = montar_bloco_medicacoes(medicacoes)
 
     if "dia do tribunal" in obs_txt.lower():
         conteudo = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -233,6 +400,8 @@ DATA: {data_str}
 ⚠ OBSERVAÇÃO PRIORITÁRIA: DIA DO TRIBUNAL
 TRANSPORTE: {TRANSPORTE_IDA} | {TRANSPORTE_VOLTA}
 OBSERVAÇÕES: {obs_txt}
+{bloco_agenda}
+{bloco_medicacoes}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
         selecionados = [TRANSPORTE_IDA, TRANSPORTE_VOLTA]
     elif procedimentos.get(ATIVIDADE_HIDRO):
@@ -244,6 +413,8 @@ ATIVIDADE PRINCIPAL: {ATIVIDADE_HIDRO}
 TRANSPORTE: {TRANSPORTE_IDA} | {TRANSPORTE_VOLTA}
 NOTA: Outros procedimentos anulados pela prioridade {ATIVIDADE_HIDRO}.
 OBSERVAÇÕES: {obs_txt}
+{bloco_agenda}
+{bloco_medicacoes}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
         selecionados = [TRANSPORTE_IDA, ATIVIDADE_HIDRO, TRANSPORTE_VOLTA]
     else:
@@ -265,8 +436,10 @@ PROCEDIMENTOS REALIZADOS:
 {chr(10).join(f'  • {p}' for p in selecionados)}
 
 OBSERVAÇÕES: {obs_txt}
+{bloco_agenda}
+{bloco_medicacoes}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-HCB Protocol v1.1 — PRODUCTION
+HCB Protocol v1.2 — PRODUCTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
     drive_ok = salvar_drive(conteudo, nome_arquivo)
@@ -292,6 +465,8 @@ HCB Protocol v1.1 — PRODUCTION
             "destino": destino,
             "procedimentos": selecionados,
             "observacoes": obs_txt,
+            "agenda": agenda_itens,
+            "medicacoes": medicacoes,
         }
     )
 
@@ -315,7 +490,7 @@ if st.session_state.historico:
 st.markdown("---")
 st.markdown(
     '<div style="text-align:center; font-family: Courier New; font-size: 0.65rem; color: #2a4a5e; letter-spacing: 2px;">'
-    "HCB PROTOCOL v1.1 — PRODUCTION &nbsp;|&nbsp; VINCULADO AO HCB SYSTEM"
+    "HCB PROTOCOL v1.2 — PRODUCTION &nbsp;|&nbsp; VINCULADO AO HCB SYSTEM"
     "</div>",
     unsafe_allow_html=True,
 )
