@@ -1,46 +1,62 @@
 # 🧠 HCB PROTOCOL — Sistema de Acompanhamento Fisioterapêutico
 
-> **Este aplicativo só opera vinculado ao HCB Protocol.**
-> Sem a cápsula Alma carregada, a sessão não tem continuidade cognitiva garantida.
+> Este aplicativo opera vinculado ao HCB Protocol para manter continuidade de contexto clínico.
 
 ---
 
 ## O que é o HCB Protocol?
 
-O **Human Context Bus (HCB)** é um sistema de continuidade cognitiva que transporta **LOGOS** (razão estruturante) entre instâncias independentes de IA.
+O **Human Context Bus (HCB)** é um sistema de continuidade de contexto entre sessões, com foco em consistência operacional e rastreabilidade.
 
-Em linguagem simples: é um protocolo que faz a IA **te conhecer de verdade** antes de começar a trabalhar — sem precisar recalibrar do zero em cada sessão.
-
-### Como funciona
-
-O HCB opera em 3 camadas, sempre nesta ordem:
+### Camadas do HCB
 
 | Camada | Nome | Conteúdo | Permanência |
 |--------|------|----------|-------------|
-| 1️⃣ | **Alma** | Identidade, estilo, valores, limitações físicas | Alta — só muda se você mudar |
-| 2️⃣ | **HCB Protocol** | Regras do sistema, estrutura, princípios | Alta — só muda se o protocolo evoluir |
-| 3️⃣ | **Gaveta Projeto** | Contexto específico, estado atual, histórico | Média — evolui com o projeto |
-
-### Por que JSON?
-
-IAs são treinadas massivamente em JSON. O formato garante:
-- Estrutura semântica clara
-- Alta densidade de informação
-- Compatibilidade universal (qualquer IA lê JSON)
-- Validação automática de sintaxe
+| 1 | Alma | Identidade, estilo, limites físicos | Alta |
+| 2 | HCB Protocol | Regras, estrutura, princípios | Alta |
+| 3 | Gaveta Projeto | Estado atual e histórico do caso | Média |
 
 ---
 
-## Este Aplicativo
+## Este aplicativo (estado atual v1.2)
 
-**HCB Fisio Acompanhamento** é uma ferramenta de registro clínico desenvolvida dentro do protocolo HCB para acompanhar sessões de fisioterapia com:
+**HCB Fisio Acompanhamento** é um app Streamlit para registro de sessões, com foco em rotina clínica de fisioterapia.
 
-- ✅ Registro de procedimentos realizados (Magnetismo, Eletrodo, Piscina, Massagem, etc.)
-- ✅ Observações personalizadas por sessão
-- ✅ Lógica de prioridade automática (Dia do Tribunal / Piscina)
-- ✅ Geração e salvamento de relatórios
-- ✅ Integração com Google Drive
-- ✅ Acesso remoto via browser (PC e celular)
+### Funcionalidades atuais
+
+- Registro de procedimentos da sessão
+- Substituição de **Piscina** por **Hidroginástica**
+- **Transporte obrigatório** em toda sessão:
+  - `Ida Transporte`
+  - `Volta Transporte`
+- Observações clínicas por sessão
+- Regra de prioridade:
+  - `dia do tribunal`
+  - `Hidroginástica` (anula demais procedimentos clínicos)
+- Geração de relatório `.txt`
+- Salvamento no Google Drive (quando configurado) com fallback local
+- Persistência JSON robusta:
+  - `dados_v1.json` (base principal)
+  - `dados_v1.backup.json` (backup automático)
+  - escrita atômica para reduzir risco de corrupção
+- Histórico carregado entre sessões/dispositivos
+- Módulos de **Agenda médica** e **Medicações** integrados ao relatório e ao JSON
+
+---
+
+## Acessibilidade visual (crucial)
+
+O app inclui um modo dedicado: `Modo de alta acessibilidade visual (WCAG)`.
+
+### O que esse modo faz
+
+- Aumenta contraste de texto e componentes
+- Amplia tipografia e áreas clicáveis
+- Destaca foco de teclado com contorno visível
+- Melhora legibilidade de campos e labels
+- Respeita `prefers-reduced-motion` para reduzir animações
+
+> Recomendação: manter este modo ativo para usuários com baixa visão, fadiga ocular ou uso em ambientes clínicos com iluminação variável.
 
 ---
 
@@ -49,73 +65,68 @@ IAs são treinadas massivamente em JSON. O formato garante:
 ### 1. Pré-requisitos
 
 ```bash
-pip install streamlit google-auth google-auth-oauthlib google-api-python-client
+pip install streamlit google-auth google-api-python-client
 ```
 
-### 2. Configurar Google Drive (opcional)
+### 2. Configurar Google Drive (opcional, via `st.secrets`)
 
-1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
-2. Crie um projeto e ative a **Google Drive API**
-3. Gere credenciais OAuth 2.0 e baixe o `credentials.json`
-4. Coloque o arquivo na raiz do projeto
+No Streamlit Cloud, configure:
+- `google_drive` (service account JSON)
+- `drive_folder_id` (opcional)
+
+> Se não houver configuração válida do Drive, o app salva localmente em `04_RELATORIOS_GERADOS/`.
 
 ### 3. Executar localmente
 
 ```bash
-streamlit run app.py
+streamlit run "01_DESENVOLVIMENTO/O Sistema HCB - Edição de Luxo - Fisio Acompanhamento.py"
 ```
 
 ### 4. Deploy no Streamlit Cloud
 
-1. Suba o repositório no GitHub
-2. Acesse [share.streamlit.io](https://share.streamlit.io)
-3. Conecte o repositório e configure os secrets do Google Drive
+1. Subir o repositório no GitHub
+2. Criar app no Streamlit Cloud
+3. Configurar `secrets` do Google Drive
+4. Publicar
 
 ---
 
-## Vinculação obrigatória ao HCB Protocol
+## Estrutura de dados local
 
-Este app foi construído dentro do protocolo HCB. Para uso correto:
-
-1. **Carregue a Alma** (cápsula de identidade do usuário) no início de cada sessão com IA
-2. **Carregue o HCB Protocol** em seguida
-3. **Carregue a Gaveta Projeto** com o contexto atual
-
-Sem esse carregamento, a IA opera sem continuidade cognitiva — o que vai contra os princípios do protocolo.
-
----
-
-## Estrutura do Projeto
-
-```
-📁 hcb-fisio/
-├── app.py                  # Aplicativo principal Streamlit
-├── README.md               # Este arquivo
-├── requirements.txt        # Dependências
-├── credentials.json        # Credenciais Google Drive (não versionar!)
-├── HCB_Protocol.json       # Protocolo HCB v1.0
-├── Perfil Usuário.json     # Cápsula Alma
-└── Pasta Criada na nuvem   # Relatórios locais (fallback)
+```text
+04_RELATORIOS_GERADOS/
+├── Relatorio_YYYYMMDD_HHMMSS.txt
+├── dados_v1.json
+└── dados_v1.backup.json
 ```
 
 ---
 
-## Princípios do HCB aplicados aqui
+## Estrutura sugerida do projeto
 
-| Princípio | Como se aplica |
-|-----------|----------------|
-| **Modularidade**    | Cada sessão de fisio = gaveta independente |
-| **Continuidade**    | Histórico preservado entre sessões |
-| **Transparência**   | Usuário vê o que foi registrado |
-| **Respeito físico** | Interface adaptada para uso com limitações |
-| **Persistência**    | LOGOS sobrevive mudanças de dispositivo/plataforma |
+```text
+hcb-fisio/
+├── 01_DESENVOLVIMENTO/
+│   └── O Sistema HCB - Edição de Luxo - Fisio Acompanhamento.py
+├── README.md
+├── requirements.txt
+└── 04_RELATORIOS_GERADOS/   # criado automaticamente em runtime
+```
 
 ---
 
-## Licença e Protocolo
+## Princípios aplicados
 
-**HCB Protocol v1.0 — PRODUCTION**
-Desenvolvido através de engenharia cognitiva iterativa.
-Criado em: 2026-02-03
+| Princípio | Aplicação |
+|-----------|-----------|
+| Continuidade | Histórico persistente entre sessões |
+| Segurança operacional | Transporte obrigatório e regras de prioridade |
+| Transparência | Pré-visualização e histórico de relatórios |
+| Persistência | JSON principal + backup + escrita atômica |
+| Acessibilidade | Uso via navegador (desktop e celular) |
 
-> *"Construir não é fácil, amigo. Devagar, mas vamos!"*
+---
+
+## Versão
+
+**HCB Protocol v1.2 — PRODUCTION**
